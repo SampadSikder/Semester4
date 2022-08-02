@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,10 +13,34 @@
 
 int main(void)
 {
-    int sockfd, new_sockfd;
+    int sockfd;
     struct sockaddr_in server_addr; // server address
 
-    char buffer[MAXDATASIZE];
+    // creating daemon
+
+    int daemon_pid = fork();
+
+    if (daemon_pid < 0)
+    {
+        exit(EXIT_FAILURE);
+    }
+    else if (daemon_pid > 0)
+    {
+        exit(EXIT_SUCCESS);
+    }
+
+    umask(0);
+
+    int sid = setsid();
+    if (sid < 0)
+    {
+        exit(EXIT_FAILURE);
+    }
+
+    if ((chdir("/")) < 0)
+    {
+        exit(EXIT_FAILURE);
+    }
 
     // socket opening
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -53,44 +76,48 @@ int main(void)
 
     while (1)
     {
-        int sin_size = sizeof(struct sockaddr_in);
-        struct sockaddr_in client_addr;                                          // connector's address
-        new_sockfd = accept(sockfd, (struct sockaddr *)&client_addr, &sin_size); // accepting new client
+        socklen_t sin_size;
+        struct sockaddr_in client_addr; // connector's address
+
+        // accept new client
+        int new_sockfd = accept(sockfd, (struct sockaddr *)&client_addr, &sin_size);
+
         if (new_sockfd < 0)
         {
             printf("Error accepting client\n");
             exit(1);
         }
 
+        int pid = fork();
+
         printf("Connection accepted from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
         printf("Client number: %d\n", ++client_number);
 
-        int pid = fork();
+        while (pid != 0)
+        {
+            char buffer[MAXDATASIZE];
+            char sentMsg[MAXDATASIZE];
 
-        if (pid == 0)
-        {
-            // parent process close
-            close(sockfd);
-        }
-        else
-        {
             bzero(buffer, MAXDATASIZE);
+
+            strcpy(sentMsg, "Please enter your message: ");
+
+            if (write(new_sockfd, sentMsg, 28) < 0)
+            {
+                perror("ERROR writing to socket");
+            }
 
             if (read(new_sockfd, buffer, MAXDATASIZE - 1) < 0)
             {
                 perror("ERROR reading from socket");
                 exit(1);
             }
-            printf("Here is the message: %s\n", buffer);
-
-            if (write(new_sockfd, "I got your message", 18) < 0)
-            {
-                perror("ERROR writing to socket");
-                exit(1);
-            }
+            printf("Here is the message from %d: %s\n", ntohs(client_addr.sin_port), buffer);
         }
+
+        close(new_sockfd);
     }
-    close(new_sockfd);
+
     close(sockfd);
 }
