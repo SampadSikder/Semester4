@@ -1,6 +1,6 @@
-void KeyExpansionCore(unsigned char * in, unsigned char i); 
-void addRoundKey(char state[], char roundKey[]);
-void subBytes(char state[]);
-void shiftRows(char state[]);
-void mixColumn(char state[]);
-void getRoundKey(char roundKey[], char expandedKey[], int round);
+void KeyExpansionCore(unsigned char * in, int i); 
+void addRoundKey(unsigned char state[], unsigned char roundKey[]);
+void subBytes(unsigned char state[]);
+void shiftRows(unsigned char state[]);
+void mixColumn(unsigned char state[]);
+void getRoundKey(unsigned char roundKey[], unsigned char expandedKey[], int round);
