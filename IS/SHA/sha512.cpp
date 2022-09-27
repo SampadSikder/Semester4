@@ -1,12 +1,12 @@
 #include <bits/stdc++.h>
-#include<stdint.h>
+#include <stdint.h>
 using namespace std;
 #define BLOCK_SIZE 1024
 #define Ch(x, y, z) ((x & y) ^ (~x & z))
 #define Maj(x, y, z) ((x & y) ^ (x & z) ^ (y & z))
 #define RotR(x, n) ((x >> n) | (x << ((sizeof(x) << 3) - n)))
-#define Sig0(x) ((RotR(x, 28)) ^ (RotR(x, 34)) ^ (RotR(x, 39)))//for a
-#define Sig1(x) ((RotR(x, 14)) ^ (RotR(x, 18)) ^ (RotR(x, 41)))//for e
+#define Sig0(x) ((RotR(x, 28)) ^ (RotR(x, 34)) ^ (RotR(x, 39))) // for a
+#define Sig1(x) ((RotR(x, 14)) ^ (RotR(x, 18)) ^ (RotR(x, 41))) // for e
 #define sig0(x) (RotR(x, 1) ^ RotR(x, 8) ^ (x >> 7))
 #define sig1(x) (RotR(x, 19) ^ RotR(x, 61) ^ (x >> 6))
 string input;
@@ -46,7 +46,7 @@ void appendLength(int length, uint64_t &lo, uint64_t &hi)
 }
 void moduloF(uint64_t **buffer)
 {
-	uint64_t h[8] ; // Initialize Vector
+	uint64_t h[8]; // Initialize Vector
 	uint64_t s[8];
 	uint64_t w[80];
 
@@ -56,27 +56,27 @@ void moduloF(uint64_t **buffer)
 	{
 		// make message scheduler
 		memcpy(w, buffer[i], 16 * sizeof(uint64_t)); // first 16 words direct copy from buffer
-		
-		for (int j = 16; j < 80; j++)				 // fill next 80 words
+
+		for (int j = 16; j < 80; j++) // fill next 80 words
 		{
 			w[j] = w[j - 16] + sig0(w[j - 15]) + w[j - 7] + sig1(w[j - 2]);
 		}
-		
+
 		memcpy(s, h, 8 * sizeof(uint64_t)); // initialize 8 registers with h initial
-		
+
 		for (int j = 0; j < 80; j++)
 		{
-			//s[0]=a, s[1]=b, s[2]=c, s[3]=d, s[4]=e, s[5]=f, s[6]=g, s[7]=h
-			uint64_t t1 = s[7] + Sig1(s[4]) +  Ch(s[4], s[5], s[6])+k[j]+w[j];//t1=  h+ ch(e,f,g)_sig1(e)+w+k
-			uint64_t t2 = Sig0(s[0]) + Maj(s[0], s[1], s[2]);//sig0(a)+maj(a,b,c)
-			s[7] = s[6];//h=g
-			s[6] = s[5];//g=f
-			s[5] = s[4];//f=e
-			s[4] = s[3] + t1;//e=d+t1
-			s[3] = s[2];//d=c
-			s[2] = s[1];//c=bS
-			s[1] = s[0];//b=a
-			s[0] = t1 + t2;//a=t1+t2
+			// s[0]=a, s[1]=b, s[2]=c, s[3]=d, s[4]=e, s[5]=f, s[6]=g, s[7]=h
+			uint64_t t1 = s[7] + Sig1(s[4]) + Ch(s[4], s[5], s[6]) + k[j] + w[j]; // t1=  h+ ch(e,f,g)_sig1(e)+w+k
+			uint64_t t2 = Sig0(s[0]) + Maj(s[0], s[1], s[2]);					  // sig0(a)+maj(a,b,c)
+			s[7] = s[6];														  // h=g
+			s[6] = s[5];														  // g=f
+			s[5] = s[4];														  // f=e
+			s[4] = s[3] + t1;													  // e=d+t1
+			s[3] = s[2];														  // d=c
+			s[2] = s[1];														  // c=b
+			s[1] = s[0];														  // b=a
+			s[0] = t1 + t2;														  // a=t1+t2
 		}
 		for (int j = 0; j < 8; j++)
 		{
@@ -85,13 +85,13 @@ void moduloF(uint64_t **buffer)
 	}
 	for (int i = 0; i < 8; i++)
 	{
-		cout<<hex<<h[i];
+		cout << hex << h[i];
 	}
 }
 uint64_t **padding(unsigned char *input)
 {
 	int len = strlen((const char *)input);
-	int l = len * 8;//byte to bit
+	int l = len * 8; // byte to bit
 	int k = (896 - 1 - l) % BLOCK_SIZE;
 	bufferSize = (l + 1 + k + 128) / BLOCK_SIZE;
 
@@ -116,15 +116,15 @@ uint64_t **padding(unsigned char *input)
 				index = i * 128 + j * 8 + k;
 				if (index < len)
 				{
-					in = in<<8|(uint64_t)input[index]; // if less than len take from input
+					in = in << 8 | (uint64_t)input[index]; // if less than len take from input
 				}
 				else if (index == len)
 				{
-					in = in<<8|0x80ULL; // if equal to len use 1
+					in = in << 8 | 0x80ULL; // if equal to len use 1
 				}
 				else
 				{
-					in =  in<<8|0x0ULL; // if greater pad 0
+					in = in << 8 | 0x0ULL; // if greater pad 0
 				}
 			}
 			buffer[i][j] = in;
